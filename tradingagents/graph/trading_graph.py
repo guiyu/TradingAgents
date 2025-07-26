@@ -46,7 +46,7 @@ class TradingAgentsGraph:
             config: Configuration dictionary. If None, uses default config
         """
         self.debug = debug
-        self.config = config or DEFAULT_CONFIG
+        self.config = config or DEFAULT_CONFIG.copy()
 
         # Update the interface's config
         set_config(self.config)
@@ -57,18 +57,8 @@ class TradingAgentsGraph:
             exist_ok=True,
         )
 
-        # Initialize LLMs
-        if self.config["llm_provider"].lower() == "openai" or self.config["llm_provider"] == "ollama" or self.config["llm_provider"] == "openrouter":
-            self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
-            self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"].lower() == "anthropic":
-            self.deep_thinking_llm = ChatAnthropic(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
-            self.quick_thinking_llm = ChatAnthropic(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"].lower() == "google":
-            self.deep_thinking_llm = ChatGoogleGenerativeAI(model=self.config["deep_think_llm"])
-            self.quick_thinking_llm = ChatGoogleGenerativeAI(model=self.config["quick_think_llm"])
-        else:
-            raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
+        # Initialize LLMs with flexible configuration
+        self._initialize_llms()
         
         self.toolkit = Toolkit(config=self.config)
 
@@ -108,6 +98,76 @@ class TradingAgentsGraph:
 
         # Set up the graph
         self.graph = self.graph_setup.setup_graph(selected_analysts)
+
+    def _initialize_llms(self):
+        """Initialize LLMs based on provider configuration with support for custom endpoints."""
+        provider = self.config.get("llm_provider", "openai").lower()
+        base_url = self.config.get("backend_url")
+        api_key = self.config.get("api_key") or self.config.get("openai_api_key")
+        
+        # 构建LLM初始化参数
+        llm_kwargs = {}
+        
+        if provider in ["openai", "ollama", "openrouter"] or base_url != "https://api.openai.com/v1":
+            # OpenAI-compatible APIs (包括自建服务器)
+            if base_url:
+                llm_kwargs["base_url"] = base_url
+            if api_key:
+                llm_kwargs["api_key"] = api_key
+            
+            # 支持通过环境变量设置额外参数
+            if "OPENAI_API_KEY" in os.environ and not api_key:
+                llm_kwargs["api_key"] = os.environ["OPENAI_API_KEY"]
+                
+            self.deep_thinking_llm = ChatOpenAI(
+                model=self.config["deep_think_llm"], 
+                **llm_kwargs
+            )
+            self.quick_thinking_llm = ChatOpenAI(
+                model=self.config["quick_think_llm"], 
+                **llm_kwargs
+            )
+            
+        elif provider == "anthropic":
+            # Anthropic Claude
+            if base_url:
+                llm_kwargs["base_url"] = base_url
+            if api_key:
+                llm_kwargs["api_key"] = api_key
+                
+            self.deep_thinking_llm = ChatAnthropic(
+                model=self.config["deep_think_llm"], 
+                **llm_kwargs
+            )
+            self.quick_thinking_llm = ChatAnthropic(
+                model=self.config["quick_think_llm"], 
+                **llm_kwargs
+            )
+            
+        elif provider == "google":
+            # Google Gemini
+            if api_key:
+                llm_kwargs["google_api_key"] = api_key
+                
+            self.deep_thinking_llm = ChatGoogleGenerativeAI(
+                model=self.config["deep_think_llm"],
+                **llm_kwargs
+            )
+            self.quick_thinking_llm = ChatGoogleGenerativeAI(
+                model=self.config["quick_think_llm"],
+                **llm_kwargs
+            )
+            
+        else:
+            raise ValueError(f"Unsupported LLM provider: {provider}")
+            
+        # 打印配置信息（用于调试）
+        if self.debug:
+            print(f"🤖 LLM Provider: {provider}")
+            print(f"🧠 Deep Think Model: {self.config['deep_think_llm']}")
+            print(f"⚡ Quick Think Model: {self.config['quick_think_llm']}")
+            if base_url != "https://api.openai.com/v1":
+                print(f"🔗 Custom API Endpoint: {base_url}")
 
     def _create_tool_nodes(self) -> Dict[str, ToolNode]:
         """Create tool nodes for different data sources."""

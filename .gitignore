@@ -1,9 +1,1 @@
-env/
-__pycache__/
-.DS_Store
-*.csv
-src/
-eval_results/
-eval_data/
-*.egg-info/
-.env
+logs/\nresults/\n.env\n*.pyc\n__pycache__/

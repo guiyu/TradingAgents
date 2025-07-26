@@ -8,15 +8,19 @@ DEFAULT_CONFIG = {
         os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
         "dataflows/data_cache",
     ),
-    # LLM settings
-    "llm_provider": "openai",
-    "deep_think_llm": "o4-mini",
-    "quick_think_llm": "gpt-4o-mini",
-    "backend_url": "https://api.openai.com/v1",
+    # LLM settings - 支持自建API服务器
+    "llm_provider": os.getenv("LLM_PROVIDER", "openai"),
+    "deep_think_llm": os.getenv("DEEP_THINK_LLM", "gpt-4o-mini"),
+    "quick_think_llm": os.getenv("QUICK_THINK_LLM", "gpt-4o-mini"),
+    # 支持自定义API端点
+    "backend_url": os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+    "openai_api_key": os.getenv("OPENAI_API_KEY"),
+    # 兼容性设置 - 支持其他API提供商
+    "api_key": os.getenv("API_KEY", os.getenv("OPENAI_API_KEY")),
     # Debate and discussion settings
-    "max_debate_rounds": 1,
-    "max_risk_discuss_rounds": 1,
-    "max_recur_limit": 100,
+    "max_debate_rounds": int(os.getenv("MAX_DEBATE_ROUNDS", "1")),
+    "max_risk_discuss_rounds": int(os.getenv("MAX_RISK_DISCUSS_ROUNDS", "1")),
+    "max_recur_limit": int(os.getenv("MAX_RECUR_LIMIT", "100")),
     # Tool settings
-    "online_tools": True,
+    "online_tools": os.getenv("ONLINE_TOOLS", "True").lower() == "true",
 }
