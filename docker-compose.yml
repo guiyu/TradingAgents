@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  tradingagents:
+    build: .
+    container_name: tradingagents-service
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FINNHUB_API_KEY=${FINNHUB_API_KEY}
+      - FEISHU_WEBHOOK_URL=${FEISHU_WEBHOOK_URL}
+      - TRADINGAGENTS_RESULTS_DIR=/app/results
+    volumes:
+      - ./results:/app/results
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - tradingagents-network
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: tradingagents-redis
+    restart: unless-stopped
+    networks:
+      - tradingagents-network
+
+networks:
+  tradingagents-network:
+    driver: bridge
+
+volumes:
+  results:
+  logs:
