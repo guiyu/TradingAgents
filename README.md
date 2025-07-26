@@ -43,9 +43,21 @@
 
 <div align="center">
 
-🚀 [TradingAgents](#tradingagents-framework) | ⚡ [Installation & CLI](#installation-and-cli) | 🎬 [Demo](https://www.youtube.com/watch?v=90gr5lwjIho) | 📦 [Package Usage](#tradingagents-package) | 🤝 [Contributing](#contributing) | 📄 [Citation](#citation)
+🚀 [TradingAgents](#tradingagents-framework) | ⚡ [Installation & CLI](#installation-and-cli) | 🎬 [Demo](https://www.youtube.com/watch?v=90gr5lwjIho) | 📦 [Package Usage](#tradingagents-package) | 🚀 [Deployment](#deployment) | 🤝 [Contributing](#contributing) | 📄 [Citation](#citation)
 
 </div>
+
+## Table of Contents
+
+- [TradingAgents Framework](#tradingagents-framework)
+- [Installation and CLI](#installation-and-cli)
+- [TradingAgents Package](#tradingagents-package)
+- [Deployment](#deployment)
+  - [Docker Deployment](#docker-deployment)
+  - [Feishu Bot Integration](#feishu-bot-integration)
+  - [Custom API Server Configuration](#custom-api-server-configuration)
+- [Contributing](#contributing)
+- [Citation](#citation)
 
 ## TradingAgents Framework
 
@@ -191,6 +203,172 @@ print(decision)
 > For `online_tools`, we recommend enabling them for experimentation, as they provide access to real-time data. The agents' offline tools rely on cached data from our **Tauric TradingDB**, a curated dataset we use for backtesting. We're currently in the process of refining this dataset, and we plan to release it soon alongside our upcoming projects. Stay tuned!
 
 You can view the full list of configurations in `tradingagents/default_config.py`.
+
+## Deployment
+
+TradingAgents supports various deployment methods, including Docker containerization, Feishu bot integration for notifications, and custom self-hosted OpenAI-compatible API servers.
+
+### Docker Deployment
+
+The project includes a complete Docker deployment setup with automated scheduling for daily trading analysis.
+
+#### Prerequisites
+
+1. **Create Environment File**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Configure Environment Variables**
+   Edit `.env` file with your API keys and settings:
+   ```bash
+   # Required API Keys
+   OPENAI_API_KEY=your_openai_api_key_here
+   FINNHUB_API_KEY=your_finnhub_api_key_here
+   
+   # Custom OpenAI-compatible API Server (optional)
+   OPENAI_API_BASE=https://your-custom-api-server.com/v1
+   
+   # Feishu Bot Integration (optional)
+   FEISHU_WEBHOOK_URL=https://open.feishu.cn/open-apis/bot/v2/hook/your-webhook-token
+   
+   # Trading Configuration
+   STOCK_SYMBOLS=AAPL,MSFT,GOOGL,TSLA,NVDA
+   ANALYSIS_TIME=14:30  # UTC time for daily analysis
+   ```
+
+#### Quick Start
+
+1. **Build and Run**
+   ```bash
+   chmod +x deploy.sh
+   ./deploy.sh
+   ```
+
+2. **Check Service Status**
+   ```bash
+   docker-compose ps
+   docker-compose logs -f tradingagents
+   ```
+
+#### Manual Deployment
+
+1. **Build Docker Image**
+   ```bash
+   docker-compose build
+   ```
+
+2. **Start Services**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **View Logs**
+   ```bash
+   docker-compose logs -f
+   ```
+
+#### Configuration Files
+
+- `docker-compose.yml`: Docker services configuration
+- `Dockerfile`: Container build instructions
+- `trading_service.py`: Automated trading analysis service
+- `deploy.sh`: One-click deployment script
+
+### Feishu Bot Integration
+
+TradingAgents supports integration with Feishu (飞书) bot for real-time notifications of trading results and error alerts.
+
+#### Setup Feishu Bot
+
+1. **Create Feishu Bot**
+   - Go to Feishu group settings
+   - Add a custom bot
+   - Set custom keyword trigger to: **"BMD"** (Bot Market Data)
+   - Copy the webhook URL
+
+2. **Configure Webhook**
+   ```bash
+   export FEISHU_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/your-webhook-token"
+   ```
+
+3. **Bot Features**
+   - **Daily Analysis Reports**: Automatically sends trading analysis results
+   - **Error Notifications**: Alerts for system errors or API failures
+   - **Custom Keyword**: All messages include "BMD" keyword for proper routing
+   - **Rich Formatting**: Supports markdown and interactive cards
+
+#### Message Types
+
+- **Success Notifications**: Trading analysis results with recommendations
+- **Error Alerts**: System failures, API errors, or configuration issues
+- **Status Updates**: Service health and operational status
+
+For detailed Feishu bot setup instructions, see [FEISHU_SETUP.md](FEISHU_SETUP.md).
+
+### Custom API Server Configuration
+
+TradingAgents supports custom self-hosted OpenAI-compatible API servers for enhanced privacy and cost control.
+
+#### Supported API Servers
+
+- **Official OpenAI API**: Default configuration
+- **Self-hosted servers**: Compatible with OpenAI API format
+- **Cloud providers**: Azure OpenAI, AWS Bedrock (with compatibility layers)
+- **Local deployments**: Ollama, vLLM, LocalAI
+
+#### Configuration
+
+1. **Set Custom API Base**
+   ```bash
+   export OPENAI_API_BASE="https://your-custom-server.com/v1"
+   export OPENAI_API_KEY="your-custom-api-key"
+   ```
+
+2. **Verify Connection**
+   ```bash
+   python scripts/test_custom_api.py
+   ```
+
+3. **Configure Model Names**
+   Update `tradingagents/default_config.py`:
+   ```python
+   # Custom model names for your API server
+   "deep_think_llm": "your-model-name",
+   "quick_think_llm": "your-fast-model-name",
+   ```
+
+#### API Compatibility
+
+- **Required endpoints**: `/chat/completions`
+- **Optional endpoints**: `/embeddings`, `/models`
+- **Supported features**: Streaming, function calling, temperature control
+
+For detailed API server setup instructions, see [CUSTOM_API_SETUP.md](CUSTOM_API_SETUP.md) and [API_CONFIG_README.md](API_CONFIG_README.md).
+
+#### Troubleshooting
+
+1. **Test API Connection**
+   ```bash
+   python scripts/validate_api_config.py
+   ```
+
+2. **Check Docker Logs**
+   ```bash
+   docker-compose logs tradingagents
+   ```
+
+3. **Verify Environment Variables**
+   ```bash
+   docker-compose exec tradingagents env | grep -E "(OPENAI|FINNHUB|FEISHU)"
+   ```
+
+#### Service Management
+
+- **Restart Service**: `docker-compose restart tradingagents`
+- **Update Configuration**: Edit `.env` and restart
+- **View Results**: Check `results/` directory
+- **Monitor Logs**: Check `logs/` directory
 
 ## Contributing
 
