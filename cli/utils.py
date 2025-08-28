@@ -152,6 +152,15 @@ def select_shallow_thinking_agent(provider) -> str:
         "ollama": [
             ("llama3.1 local", "llama3.1"),
             ("llama3.2 local", "llama3.2"),
+        ],
+        "newapi": [
+            ("GPT-4o-mini - Fast and efficient for quick tasks", "gpt-4o-mini"),
+            ("GPT-3.5-turbo - Classic fast model for general use", "gpt-3.5-turbo"),
+            ("Claude-3.5-haiku - Fast inference with good capabilities", "claude-3-5-haiku-20241022"),
+            ("Gemini-flash - Google's fast model for quick tasks", "gemini-1.5-flash"),
+            ("DeepSeek-chat - High-performance Chinese model", "deepseek-chat"),
+            ("GLM-4-flash - Fast variant of ChatGLM-4", "glm-4-flash"),
+            ("Qwen-turbo - Alibaba's efficient model", "qwen-turbo"),
         ]
     }
 
@@ -214,6 +223,18 @@ def select_deep_thinking_agent(provider) -> str:
         "ollama": [
             ("llama3.1 local", "llama3.1"),
             ("qwen3", "qwen3"),
+        ],
+        "newapi": [
+            ("GPT-4o - Advanced model with excellent capabilities", "gpt-4o"),
+            ("GPT-4-turbo - Powerful model for complex reasoning", "gpt-4-turbo"),
+            ("Claude-3-5-sonnet - Highly capable reasoning model", "claude-3-5-sonnet-20241022"),
+            ("Claude-3-opus - Most powerful Claude model", "claude-3-opus-20240229"),
+            ("Gemini-pro - Google's advanced reasoning model", "gemini-1.5-pro"),
+            ("DeepSeek-coder - Specialized coding and reasoning model", "deepseek-coder"),
+            ("GLM-4-plus - Enhanced reasoning ChatGLM-4", "glm-4-plus"),
+            ("Qwen-max - Alibaba's most powerful model", "qwen-max"),
+            ("ERNIE-4.0 - Baidu's advanced reasoning model", "ernie-4.0-turbo"),
+            ("Spark-Max - iFlytek's top-tier reasoning model", "spark-max"),
         ]
     }
     
@@ -247,7 +268,8 @@ def select_llm_provider() -> tuple[str, str]:
         ("Anthropic", "https://api.anthropic.com/"),
         ("Google", "https://generativelanguage.googleapis.com/v1"),
         ("Openrouter", "https://openrouter.ai/api/v1"),
-        ("Ollama", "http://localhost:11434/v1"),        
+        ("Ollama", "http://localhost:11434/v1"),
+        ("NewAPI", "https://b4u.qzz.io/v1"),
     ]
     
     choice = questionary.select(
